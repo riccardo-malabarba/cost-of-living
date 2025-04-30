@@ -6,7 +6,7 @@ df = pd.read_csv('dataset/data_proc.csv')
 df_filtered = df.copy()
 
 st.header("EuroNomad Navigator 🗺️")
-st.write("Your EU City Cost & Budget Guide!")
+st.badge("Your EU City Cost & Budget Guide!", icon=":material/favorite:", color="violet")
 
 segmented_dim_options = {
     "Saving Rate": "SavingToSalaryRatio",
@@ -78,7 +78,7 @@ with col1:
                 "lon":12
             },
             projection="kavrayskiy7",
-            height=600,
+            height=500,
             title=f"{segmented_dim} by {segmented_aggr} - Map View"
         )
     
@@ -157,7 +157,7 @@ with col2:
             ),  
             height=max(300, len(df_filtered[segmented_dim_value].unique()) * 30),
             xaxis_title=segmented_dim,
-            yaxis_title=segmented_aggr,
+            yaxis_title="",
         )
         
         fig_bar.update_coloraxes(showscale=False)
@@ -165,7 +165,5 @@ with col2:
         
         st.plotly_chart(fig_bar)
     
-# Similar to tabular data above, display a cool table with df_filtered and all segmented dim available, ordered by segmented_dim_value from highest to lowest, reindexed from 1 (highest) to n (lowest)
-
-st.write("### Detailed Data")
+st.write("Detailed Data")
 st.dataframe(df_filtered.sort_values(segmented_dim_value, ascending=False).reset_index(drop=True).rename(index=lambda x: x + 1))
