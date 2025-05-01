@@ -5,8 +5,8 @@ import plotly.express as px
 df = pd.read_csv('dataset/data_proc.csv')
 df_filtered = df.copy()
 
-st.header("EuroNomad Navigator 🗺️")
-st.badge("Your EU City Cost & Budget Guide!", icon=":material/favorite:", color="violet")
+st.header("🗺️ EuroNomad Navigator")
+st.write("Your EU City Cost & Budget Guide!")
 
 segmented_dim_options = {
     "Saving Rate": "SavingToSalaryRatio",
@@ -21,23 +21,24 @@ segmented_aggr_options = {
     "Countries": "country"
 }
 
-with st.expander(label="Filters", icon=":material/filter_alt:"):
+with st.expander(label="Filters", icon=":material/filter_alt:", expanded=True):
 
-    col1, col2 = st.columns([0.7, 0.3])
+    col1, col2 = st.columns([0.5, 0.5], gap="large")
 
     with col1:
         segmented_aggr = st.segmented_control(label="Choose one option", options=segmented_aggr_options.keys(), default=list(segmented_aggr_options.keys())[0])
         segmented_aggr_value = segmented_aggr_options[segmented_aggr]
-
-        segmented_dim = st.pills(label="What do you want to analyze?", options=segmented_dim_options.keys(), default=list(segmented_dim_options.keys())[0])
-        segmented_dim_value = segmented_dim_options[segmented_dim]
-
+        
         multiselect_filter = st.multiselect("Filter by Country", list(df.sort_values("country")["country"].unique()), placeholder="Optional")
         if multiselect_filter:
             df_filtered = df_filtered[df_filtered["country"].isin(multiselect_filter)]
         else:
             df_filtered = df.copy() 
-            
+
+    with col2:
+        segmented_dim = st.pills(label="What do you want to analyze?", options=segmented_dim_options.keys(), default=list(segmented_dim_options.keys())[0])
+        segmented_dim_value = segmented_dim_options[segmented_dim]
+
         slider_range_default= [df_filtered[segmented_dim_value].min(), df_filtered[segmented_dim_value].max()]
         slider_range = st.slider("Range", min_value=slider_range_default[0], max_value=slider_range_default[1], value=(slider_range_default[0], slider_range_default[1]), step=1.0)
 
@@ -70,8 +71,16 @@ with col1:
             lat="latitude",
             lon="longitude",
             color=segmented_dim_value,
-            hover_name='city',
-            hover_data=[segmented_dim_value],
+            hover_name="city",
+            hover_data={
+                "country": True,
+                "latitude": False,
+                "longitude": False
+            },
+            labels={
+                "country": "Country",
+                segmented_dim_value: segmented_dim
+            },
             color_continuous_scale="tempo",
             center={
                 "lat":52,
@@ -81,6 +90,22 @@ with col1:
             height=500,
             title=f"{segmented_dim} by {segmented_aggr} - Map View"
         )
+        
+        if not df_filtered.empty:
+            mid_lat = (df_filtered["latitude"].max() + df_filtered["latitude"].min()) / 2
+            mid_lon = (df_filtered["longitude"].max() + df_filtered["longitude"].min()) / 2
+            max_lat_diff_filtered = df_filtered["latitude"].max() - df_filtered["latitude"].min()
+            max_lat_diff = df["latitude"].max() - df["latitude"].min()
+            lat_ratio = max_lat_diff_filtered / max_lat_diff
+
+            fig_map.update_geos(
+                center={
+                    "lat": mid_lat,
+                    "lon": mid_lon
+                },
+                projection_scale=max(4, round(25 - 21 * lat_ratio))
+            )
+            
     
     else:
         fig_map = px.choropleth(
@@ -115,7 +140,6 @@ with col1:
         showocean=True, oceancolor="LightBlue",
         showframe=False, framecolor="Black",
         showcountries=True, countrycolor="Grey",
-        projection_scale=4,
     )
 
     fig_map.update_layout(
@@ -123,7 +147,8 @@ with col1:
             orientation="h",
             xanchor="center",
             y=-0.2,
-            len=1
+            len=1,
+            title=segmented_dim
         )
     )
     
@@ -133,11 +158,11 @@ with col1:
     )
     
     st.plotly_chart(fig_map)
-    st.plotly_chart(fig_hist)
+    # st.plotly_chart(fig_hist)
 
 with col2:
     
-    with st.container(height=1050):
+    with st.container(height=500):
 
         fig_bar = px.bar(
         df_filtered,
