@@ -1,9 +1,9 @@
 import streamlit as st
 
 overview = st.Page("pages/overview.py", title="Overview", icon=":material/travel_explore:")
-budget_simulator = st.Page("pages/page_1.py", title="Delete entry", icon=":material/delete:")
+simulator = st.Page("pages/simulator.py", title="Budget Simulator", icon=":material/attach_money:")
 
-pg = st.navigation([overview, budget_simulator])
+pg = st.navigation([overview, simulator])
 st.set_page_config(
     page_title="EuroNomad Navigator",
     page_icon="🗺️",
